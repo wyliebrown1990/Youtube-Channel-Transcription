@@ -1,0 +1,6 @@
+Flask
+google-api-python-client
+yt-dlp
+openai-whisper
+python-dotenv
+gunicorn

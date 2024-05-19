@@ -1,0 +1,100 @@
+import os
+import warnings
+import json
+from googleapiclient.discovery import build
+from dotenv import load_dotenv
+import yt_dlp
+import whisper
+
+# Suppress specific warnings
+warnings.filterwarnings("ignore", message="FP16 is not supported on CPU; using FP32 instead")
+
+# Load environment variables from .env file
+load_dotenv()
+
+# YouTube Data API key
+youtube_api_key = os.getenv('GOOGLE_API_KEY')
+openai_api_key = os.getenv('OPENAI_API_KEY')
+
+# Initialize YouTube API client
+youtube = build('youtube', 'v3', developerKey=youtube_api_key)
+
+# Directory to save audio files
+save_dir = "docs/youtube/"
+os.makedirs(save_dir, exist_ok=True)
+
+# Path to Netscape formatted cookies file
+cookies_file = "/Users/wyliebrown/langchain_demo/cookies.txt"
+ffmpeg_location = "/opt/homebrew/bin/ffmpeg"
+
+# Channel ID of the YouTube channel
+channel_id = 'UCv6fXd6_h-Hjuo9K6ieYaDQ'
+
+def get_video_urls_from_channel(channel_id):
+    video_urls = []
+    next_page_token = None
+
+    while True:
+        request = youtube.search().list(
+            part="snippet",
+            channelId=channel_id,
+            maxResults=50,
+            pageToken=next_page_token,
+            type="video"
+        )
+        response = request.execute()
+
+        for item in response['items']:
+            video_urls.append(f"https://www.youtube.com/watch?v={item['id']['videoId']}")
+
+        next_page_token = response.get('nextPageToken')
+        if not next_page_token:
+            break
+
+    return video_urls
+
+def download_and_transcribe(url):
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'outtmpl': os.path.join(save_dir, '%(title)s.%(ext)s'),
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+        'cookiefile': cookies_file,
+        'ffmpeg_location': ffmpeg_location
+    }
+
+    print(f"Starting download of the YouTube video: {url}")
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info_dict = ydl.extract_info(url, download=True)
+        audio_file_path = ydl.prepare_filename(info_dict).replace('.webm', '.mp3')
+
+    print(f"Download complete. Audio file saved to {audio_file_path}")
+
+    # Initialize the Whisper model
+    print("Loading Whisper model...")
+    model = whisper.load_model("base")
+
+    # Transcribe the audio file
+    print("Starting transcription...")
+    result = model.transcribe(audio_file_path)
+
+    print("Transcription complete. Saving the transcription to a text file...")
+
+    # Save the transcription to a text file
+    transcription_file_path = os.path.join(save_dir, info_dict['title'] + ".txt")
+    with open(transcription_file_path, "w") as f:
+        f.write(result["text"])
+
+    print(f"Transcription saved to {transcription_file_path}")
+    print(result["text"][:500])
+
+# Get all video URLs from the channel
+video_urls = get_video_urls_from_channel(channel_id)
+
+# Download and transcribe each video
+for url in video_urls:
+    download_and_transcribe(url)
