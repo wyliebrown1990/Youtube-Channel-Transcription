@@ -1,2 +1,5 @@
 # .gitignore
 .env
+.ipynb_checkpoints
+.virtual_documents
+docs/youtube

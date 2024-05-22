@@ -1,37 +1,20 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <title>Transcription App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <title>YouTube Transcriber</title>
 </head>
 <body>
-    <div class="container">
-        <h1>YouTube Transcriber</h1>
-        <form method="POST" action="/">
-            <label for="channel_id">YouTube Channel ID:</label>
-            <input type="text" id="channel_id" name="channel_id" required>
-            <label for="num_videos">Number of Videos:</label>
-            <input type="number" id="num_videos" name="num_videos" required>
-            <button type="submit">Transcribe</button>
-        </form>
-        <div id="output">
-            <h2>Transcription Progress</h2>
-            <pre id="progress"></pre>
-        </div>
-    </div>
-    <script>
-        async function fetchProgress() {
-            const response = await fetch('/progress');
-            const data = await response.json();
-            const progressDiv = document.getElementById('progress');
-            progressDiv.innerHTML = '';
-            data.forEach(transcription => {
-                progressDiv.innerHTML += transcription + '\n\n';
-            });
-        }
-        setInterval(fetchProgress, 5000);
-    </script>
+    <h1>YouTube Channel Transcription</h1>
+    <form method="post" action="/">
+        <label for="channel_id">YouTube Channel ID:</label>
+        <input type="text" id="channel_id" name="channel_id" required>
+        <br>
+        <label for="num_videos">Number of Videos:</label>
+        <input type="number" id="num_videos" name="num_videos" required>
+        <br>
+        <input type="submit" value="Start Transcription">
+    </form>
 </body>
 </html>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Transcription Progress</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        function fetchProgress() {
+            fetch('/progress_data')
+                .then(response => response.json())
+                .then(data => {
+                    const progressElement = document.getElementById('progress');
+                    progressElement.innerHTML = '';
+                    data.forEach(info => {
+                        const container = document.createElement('div');
+                        container.classList.add('chat-block'); // Adding class for styling
+                        container.innerHTML = `
+                            <p><strong>YouTube URL:</strong> ${info.url}</p>
+                            <p><strong>Destination:</strong> ${info.destination}</p>
+                            <p><strong>Saved File Name:</strong> ${info.file_name}</p>
+                            <p><strong>Sample Text:</strong> ${info.sample_text}</p>
+                            <hr>
+                        `;
+                        progressElement.appendChild(container);
+                    });
+                })
+                .catch(error => console.error('Error fetching progress:', error));
+        }
+
+        setInterval(fetchProgress, 5000);  // Poll every 5 seconds
+    </script>
+</head>
+<body>
+    <h1>Transcription Progress</h1>
+    <div id="progress">
+        <!-- Transcription progress will be displayed here -->
+    </div>
+</body>
+</html>
